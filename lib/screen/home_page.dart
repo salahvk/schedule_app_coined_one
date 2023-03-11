@@ -18,10 +18,12 @@ class _HomePageState extends State<HomePage> {
   final ScheduleBloc _scheduleBloc = ScheduleBloc();
   late DateTime _selectedDate;
   String? moYear;
+  List<Data> sList = [];
 
   @override
   void initState() {
     super.initState();
+
     _scheduleBloc.add(FetchScheduleEvent());
     _resetSelectedDate();
   }
@@ -85,11 +87,24 @@ class _HomePageState extends State<HomePage> {
                   } else if (state is ScheduleLoading) {
                     return _buildLoading();
                   } else if (state is ScheduleLoaded) {
-                    final sDate = _selectedDate.toString().substring(0, 11);
-                    print(sDate);
-                    print(state.schedules.data?.contains(sDate));
+                    String formattedDate =
+                        DateFormat('dd-MM-yyyy').format(_selectedDate);
+                    // print(formattedDate);
+                    // final sDate = _selectedDate.toString().substring(0, 11);
+                    // print(sDate);
+                    // print(state.schedules.data?.contains(sDate));
+                    sList.clear();
+                    state.schedules.data?.forEach((element) {
+                      // print(element.date);
+                      if (element.date == formattedDate) {
+                        sList.add(element);
+                        print(sList);
+                        // print(element.toJson());
+                      }
+                      // print(element.date == formattedDate);
+                    });
 
-                    return _buildScheduleTable(context, state.schedules);
+                    return _buildScheduleTable(context, state.schedules, sList);
                   } else if (state is ScheduleError) {
                     return Container();
                   } else {
@@ -129,11 +144,12 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-Widget _buildScheduleTable(BuildContext context, ScheduleModel model) {
+Widget _buildScheduleTable(
+    BuildContext context, ScheduleModel model, List list) {
   return SizedBox(
     height: 300,
     child: ListView.builder(
-      itemCount: model.data?.length,
+      itemCount: list.length,
       itemBuilder: (context, index) {
         return Container(
           margin: const EdgeInsets.all(8.0),
