@@ -15,10 +15,10 @@ class ScheduleLoaded extends ScheduleState {
   // final List<ScheduleModel> schedules;
   final ScheduleModel schedules;
 
-  const ScheduleLoaded(this.schedules);
+  const ScheduleLoaded({required this.schedules});
 
-  @override
-  List<Object> get props => [schedules];
+  // @override
+  // List<Object> get props => [schedules];
 }
 
 class ScheduleError extends ScheduleState {

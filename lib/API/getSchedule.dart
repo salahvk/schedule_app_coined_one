@@ -9,7 +9,7 @@ class ApiProvider {
     try {
       final url = Uri.parse(getUrl);
       final headers = {'Content-Type': 'application/json'};
-      final response = await http.post(url, headers: headers);
+      final response = await http.get(url, headers: headers);
       var jsonResponse = jsonDecode(response.body);
       return ScheduleModel.fromJson(jsonResponse);
     } catch (_) {

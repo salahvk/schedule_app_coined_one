@@ -1,8 +1,10 @@
 import 'package:calendar_timeline/calendar_timeline.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:schedule_app_coined_one/bloc/schedule_bloc.dart';
 import 'package:schedule_app_coined_one/components/color_manager.dart';
+import 'package:schedule_app_coined_one/model/scheduleModel.dart';
 import 'package:schedule_app_coined_one/schedule_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
@@ -61,6 +63,7 @@ class _HomePageState extends State<HomePage> {
                       moYear = DateFormat('yMMMM').format(date),
                       _selectedDate = date
                     });
+                print(_selectedDate);
               },
               leftMargin: 20,
               monthColor: ColorManager.textColor,
@@ -73,6 +76,28 @@ class _HomePageState extends State<HomePage> {
               locale: 'en',
             ),
             const SizedBox(height: 20),
+            BlocProvider(
+              create: (_) => _scheduleBloc,
+              child: BlocBuilder<ScheduleBloc, ScheduleState>(
+                builder: (context, state) {
+                  if (state is ScheduleInitial) {
+                    return _buildLoading();
+                  } else if (state is ScheduleLoading) {
+                    return _buildLoading();
+                  } else if (state is ScheduleLoaded) {
+                    final sDate = _selectedDate.toString().substring(0, 11);
+                    print(sDate);
+                    print(state.schedules.data?.contains(sDate));
+
+                    return _buildScheduleTable(context, state.schedules);
+                  } else if (state is ScheduleError) {
+                    return Container();
+                  } else {
+                    return Container();
+                  }
+                },
+              ),
+            ),
             // Padding(
             //   padding: const EdgeInsets.only(left: 16),
             //   child: TextButton(
@@ -86,7 +111,7 @@ class _HomePageState extends State<HomePage> {
             //     onPressed: () => setState(() => _resetSelectedDate()),
             //   ),
             // ),
-            const SizedBox(height: 20),
+            // const SizedBox(height: 20),
           ],
         ),
       ),
@@ -103,3 +128,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+Widget _buildScheduleTable(BuildContext context, ScheduleModel model) {
+  return SizedBox(
+    height: 300,
+    child: ListView.builder(
+      itemCount: model.data?.length,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.all(8.0),
+          child: Card(
+            child: Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Column(
+                children: const <Widget>[
+                  // Text("Country: ${model.countries![index].country}"),
+                  // Text(
+                  //     "Total Confirmed: ${model.countries![index].totalConfirmed}"),
+                  // Text("Total Deaths: ${model.countries![index].totalDeaths}"),
+                  // Text(
+                  //     "Total Recovered: ${model.countries![index].totalRecovered}"),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget _buildLoading() => const Center(child: CircularProgressIndicator());
