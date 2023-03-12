@@ -14,7 +14,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         print("Data Fetching");
         emit(ScheduleLoading());
         final data = await ApiProvider().getScheduleDataList();
-        print(data);
+
         emit(ScheduleLoaded(schedules: data));
       } catch (_) {}
     });

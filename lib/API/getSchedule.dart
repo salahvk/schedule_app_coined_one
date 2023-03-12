@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 import 'package:schedule_app_coined_one/API/endpoint.dart';
 import 'package:schedule_app_coined_one/model/scheduleModel.dart';

@@ -35,11 +35,11 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
       form.save();
 
       final status = await saveSchedule(
-          name: BottomSheetControllers.nameController.text,
-          startTime: BottomSheetControllers.startTimeController.text,
-          endTime: BottomSheetControllers.endTimeController.text,
-          date: BottomSheetControllers.dateController.text,
-          context: context);
+        name: BottomSheetControllers.nameController.text,
+        startTime: BottomSheetControllers.startTimeController.text,
+        endTime: BottomSheetControllers.endTimeController.text,
+        date: BottomSheetControllers.dateController.text,
+      );
 
       if (status != 'success') {
         showOverlapPopup(context);
@@ -48,11 +48,12 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
         });
       } else {
         _scheduleBloc.add(FetchScheduleEvent());
+
+        // Navigator.of(context).pop();
+        await Future.delayed(const Duration(seconds: 3));
         setState(() {
           isLoading = false;
         });
-        // Navigator.of(context).pop();
-        await Future.delayed(const Duration(seconds: 3));
         Navigator.push(context, MaterialPageRoute(builder: (ctx) {
           return const HomePage();
         }));
