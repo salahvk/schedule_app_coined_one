@@ -1,8 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schedule_app_coined_one/API/saveSchedule.dart';
+import 'package:schedule_app_coined_one/bloc/schedule_bloc.dart';
 import 'package:schedule_app_coined_one/components/color_manager.dart';
+import 'package:schedule_app_coined_one/components/style_manager.dart';
 import 'package:schedule_app_coined_one/controllers/controllers.dart';
+import 'package:schedule_app_coined_one/screen/home_page.dart';
+import 'package:schedule_app_coined_one/utils/popup.dart';
 
 class AddScheduleBottomSheet extends StatefulWidget {
   const AddScheduleBottomSheet({Key? key}) : super(key: key);
@@ -14,30 +20,52 @@ class AddScheduleBottomSheet extends StatefulWidget {
 class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
-
   TimeOfDay selectedTime = TimeOfDay.now();
   DateTime selectedDate = DateTime.now();
+  final ScheduleBloc _scheduleBloc = ScheduleBloc();
+  final today = DateFormat("dd-MM-yyyy").format(DateTime.now());
+  bool isLoading = false;
 
-  void _submitForm() {
+  void _submitForm() async {
+    setState(() {
+      isLoading = true;
+    });
     final form = _formKey.currentState;
     if (form != null && form.validate()) {
       form.save();
-      saveSchedule(
+
+      final status = await saveSchedule(
           name: BottomSheetControllers.nameController.text,
           startTime: BottomSheetControllers.startTimeController.text,
           endTime: BottomSheetControllers.endTimeController.text,
-          date: BottomSheetControllers.dateController.text);
-      Navigator.of(context).pop();
+          date: BottomSheetControllers.dateController.text,
+          context: context);
+
+      if (status != 'success') {
+        showOverlapPopup(context);
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        _scheduleBloc.add(FetchScheduleEvent());
+        setState(() {
+          isLoading = false;
+        });
+        // Navigator.of(context).pop();
+        await Future.delayed(const Duration(seconds: 3));
+        Navigator.push(context, MaterialPageRoute(builder: (ctx) {
+          return const HomePage();
+        }));
+      }
     }
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    BottomSheetControllers.startTimeController.text = '9AM';
-    BottomSheetControllers.endTimeController.text = '10AM';
-    BottomSheetControllers.dateController.text = '12/2/2021';
+    BottomSheetControllers.startTimeController.text = '9:00 AM';
+    BottomSheetControllers.endTimeController.text = '10:00 AM';
+    BottomSheetControllers.dateController.text = today;
   }
 
   @override
@@ -54,7 +82,11 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Add Schedule"),
+                  Text(
+                    "Add Schedule",
+                    style: getSemiBoldtStyle(
+                        color: ColorManager.blue, fontSize: 16),
+                  ),
                   InkWell(
                       onTap: () {
                         Navigator.of(context).pop();
@@ -65,7 +97,13 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
               const SizedBox(
                 height: 15,
               ),
-              const Text("Name"),
+              Text(
+                "Name",
+                style: getRegularStyle(color: ColorManager.black, fontSize: 12),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
               Container(
                 decoration: BoxDecoration(
                   color: ColorManager.lightBlue,
@@ -86,8 +124,13 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
               const SizedBox(
                 height: 15,
               ),
-              const Text("Date & Time"),
-
+              Text(
+                "Date & Time",
+                style: getRegularStyle(color: ColorManager.black, fontSize: 12),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
               Container(
                 // height: 200,
                 decoration: BoxDecoration(
@@ -95,13 +138,18 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 0, 8),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 0, 8),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Flexible(flex: 4, child: Text('Start Time')),
+                          Flexible(
+                              flex: 4,
+                              child: Text('Start Time',
+                                  style: getRegularStyle(
+                                      color: ColorManager.black,
+                                      fontSize: 14))),
                           Flexible(
                             flex: 2,
                             child: GestureDetector(
@@ -119,13 +167,17 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                                 child: TextFormField(
                                   controller: BottomSheetControllers
                                       .startTimeController,
-
+                                  style:
+                                      const TextStyle(color: ColorManager.blue),
                                   decoration: const InputDecoration(
-                                    suffixIcon:
-                                        Icon(Icons.arrow_forward_ios_rounded),
+                                    suffix: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                    ),
                                     // labelText: 'Name',
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentPadding:
+                                        EdgeInsets.fromLTRB(20, 0, 10, 0),
                                   ),
                                   // decoration: const InputDecoration(
                                   //   labelText: 'Time',
@@ -136,13 +188,18 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                           ),
                         ],
                       ),
-
+                      const Divider(color: ColorManager.black, thickness: .1),
                       // EndTime Widget
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Flexible(flex: 4, child: Text('End Time')),
+                          Flexible(
+                              flex: 4,
+                              child: Text('End Time',
+                                  style: getRegularStyle(
+                                      color: ColorManager.black,
+                                      fontSize: 14))),
                           Flexible(
                             flex: 2,
                             child: GestureDetector(
@@ -160,13 +217,17 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                                 child: TextFormField(
                                   controller:
                                       BottomSheetControllers.endTimeController,
-
+                                  style:
+                                      const TextStyle(color: ColorManager.blue),
                                   decoration: const InputDecoration(
-                                    suffixIcon:
-                                        Icon(Icons.arrow_forward_ios_rounded),
+                                    suffix: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                    ),
                                     // labelText: 'Name',
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentPadding:
+                                        EdgeInsets.fromLTRB(20, 0, 10, 0),
                                   ),
                                   // decoration: const InputDecoration(
                                   //   labelText: 'Time',
@@ -177,25 +238,22 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                           ),
                         ],
                       ),
+                      const Divider(color: ColorManager.black, thickness: .1),
 
                       // Date Widget
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Flexible(flex: 4, child: Text('Date')),
+                          Flexible(
+                              flex: 4,
+                              child: Text('Date',
+                                  style: getRegularStyle(
+                                      color: ColorManager.black,
+                                      fontSize: 14))),
                           Flexible(
                             flex: 3,
                             child: GestureDetector(
-                              // onTap: () async {
-                              //   TimeOfDay? time = await showTimePicker(
-                              //     context: context,
-                              //     initialTime: TimeOfDay.now(),
-                              //   );
-                              //   if (time != null) {
-                              //     _timeController.text = time.format(context);
-                              //   }
-                              // },
                               onTap: () {
                                 _selectDate(context);
                               },
@@ -203,13 +261,17 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                                 child: TextFormField(
                                   controller:
                                       BottomSheetControllers.dateController,
+                                  style:
+                                      const TextStyle(color: ColorManager.blue),
 
                                   decoration: const InputDecoration(
-                                    suffixIcon:
-                                        Icon(Icons.arrow_forward_ios_rounded),
-                                    // labelText: 'Name',
+                                    suffix: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 16,
+                                    ),
                                     border: InputBorder.none,
-                                    contentPadding: EdgeInsets.all(10),
+                                    contentPadding:
+                                        EdgeInsets.fromLTRB(30, 0, 10, 0),
                                   ),
                                   // decoration: const InputDecoration(
                                   //   labelText: 'Time',
@@ -224,44 +286,23 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16.0),
-              // DateTimePicker(
-              //   type: DateTimePickerType.dateTimeSeparate,
-              //   initialValue: DateTime.now().toString(),
-              //   firstDate: DateTime(2000),
-              //   lastDate: DateTime(2100),
-              //   dateLabelText: 'Start Time',
-              //   timeLabelText: 'Time',
-              //   onChanged: (value) => _startTime = DateTime.parse(value),
-              //   validator: (value) => value == null ? 'Please enter a start time' : null,
-              // ),
-              // SizedBox(height: 16.0),
-              // DateTimePicker(
-              //   type: DateTimePickerType.dateTimeSeparate,
-              //   initialValue: DateTime.now().toString(),
-              //   firstDate: DateTime(2000),
-              //   lastDate: DateTime(2100),
-              //   dateLabelText: 'End Time',
-              //   timeLabelText: 'Time',
-              //   onChanged: (value) => _endTime = DateTime.parse(value),
-              //   validator: (value) => value == null ? 'Please enter an end time' : null,
-              // ),
-              // SizedBox(height: 16.0),
-              // DateTimePicker(
-              //   type: DateTimePickerType.date,
-              //   initialValue: DateTime.now().toString(),
-              //   firstDate: DateTime(2000),
-              //   lastDate: DateTime(2100),
-              //   dateLabelText: 'Date',
-              //   onChanged: (value) => _date = DateTime.parse(value),
-              //   validator: (value) => value == null ? 'Please enter a date' : null,
-              // ),
-              const SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Add Schedule'),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    _submitForm();
+                    // context.watch<ScheduleBloc>().add(FetchScheduleEvent());
+                    // setState(() {});
+                  },
+                  child: isLoading
+                      ? const CircularProgressIndicator(
+                          color: ColorManager.primary,
+                        )
+                      : const Text('Add Schedule'),
+                ),
               ),
+              const SizedBox(height: 20.0),
             ],
           ),
         ),
@@ -281,8 +322,8 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
         },
         context: context,
         initialDate: selectedDate,
-        firstDate: DateTime(1900, 8),
-        lastDate: DateTime.now());
+        lastDate: DateTime(2100, 8),
+        firstDate: DateTime.now());
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
@@ -291,5 +332,19 @@ class _AddScheduleBottomSheetState extends State<AddScheduleBottomSheet> {
             DateFormat("dd-MM-yyyy").format(selectedDate);
       });
     }
+  }
+
+  void showOverlapPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ScheduleOverlapPopup(
+          message: 'This overlaps with another schedule and can\'t be saved.',
+          onOkayPressed: () {
+            Navigator.of(context).pop();
+          },
+        );
+      },
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:schedule_app_coined_one/bloc/schedule_bloc.dart';
 import 'package:schedule_app_coined_one/screen/home_page.dart';
 
 void main() => runApp(const MyApp());
@@ -17,7 +18,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomePage(),
+      home: BlocProvider(
+        create: (context) => ScheduleBloc(),
+        child: const HomePage(),
+      ),
     );
   }
 }

@@ -10,9 +10,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   ScheduleBloc() : super(ScheduleInitial()) {
     on<FetchScheduleEvent>((event, emit) async {
       try {
-        print("Initial");
         emit(ScheduleInitial());
-        print("Loading");
+        print("Data Fetching");
         emit(ScheduleLoading());
         final data = await ApiProvider().getScheduleDataList();
         print(data);
