@@ -1,4 +1,3 @@
-import 'package:calendar_timeline/calendar_timeline.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +6,7 @@ import 'package:schedule_app_coined_one/components/color_manager.dart';
 import 'package:schedule_app_coined_one/components/style_manager.dart';
 import 'package:schedule_app_coined_one/model/scheduleModel.dart';
 import 'package:schedule_app_coined_one/schedule_bottom_sheet.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -18,6 +18,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScheduleBloc _scheduleBloc = ScheduleBloc();
   late DateTime _selectedDate;
+  DateTime? _selectedDay;
+  DateTime _focusedDay = DateTime.now();
+  final CalendarFormat _calendarFormat = CalendarFormat.week;
   String? initMonth;
   List<Data> scheduleList = [];
 
@@ -45,37 +48,75 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                "$initMonth",
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge!
-                    .copyWith(color: ColorManager.textColor),
-              ),
-            ),
-            CalendarTimeline(
-              initialDate: _selectedDate,
-              firstDate: DateTime.now().subtract(const Duration(days: 365 * 4)),
-              lastDate: DateTime.now().add(const Duration(days: 365 * 4)),
-              onDateSelected: (date) {
-                setState(() => {
-                      initMonth = DateFormat('yMMMM').format(date),
-                      _selectedDate = date
-                    });
+            // Padding(
+            //   padding: const EdgeInsets.all(16),
+            //   child: Text(
+            //     "$initMonth",
+            //     style: Theme.of(context)
+            //         .textTheme
+            //         .titleLarge!
+            //         .copyWith(color: ColorManager.textColor),
+            //   ),
+            // ),
+            // CalendarTimeline(
+            //   initialDate: _selectedDate,
+            //   firstDate: DateTime.now().subtract(const Duration(days: 365 * 4)),
+            //   lastDate: DateTime.now().add(const Duration(days: 365 * 4)),
+            //   onDateSelected: (date) {
+            //     setState(() => {
+            //           initMonth = DateFormat('yMMMM').format(date),
+            //           _selectedDate = date
+            //         });
+            //   },
+            //   leftMargin: 20,
+            //   shrink: false,
+            //   monthColor: ColorManager.textColor,
+            //   dayColor: ColorManager.textColor,
+            //   dayNameColor: const Color(0xFF333A47),
+            //   activeDayColor: Colors.white,
+            //   activeBackgroundDayColor: Colors.blue,
+            //   dotsColor: const Color(0xFF333A47),
+            //   selectableDayPredicate: (date) => date.day != 23,
+            //   locale: 'en',
+            // ),
+            TableCalendar(
+              firstDay: DateTime.now().subtract(const Duration(days: 365 * 4)),
+              lastDay: DateTime.now().add(const Duration(days: 365 * 4)),
+              focusedDay: _focusedDay,
+              headerStyle: HeaderStyle(
+                  // titleCentered: true,
+                  titleTextStyle:
+                      getMediumtStyle(color: ColorManager.black, fontSize: 16),
+                  formatButtonVisible: false,
+                  headerPadding: const EdgeInsets.all(16),
+                  leftChevronVisible: false,
+                  rightChevronVisible: false),
+              calendarFormat: _calendarFormat,
+              selectedDayPredicate: (day) {
+                return isSameDay(_selectedDate, day);
               },
-              leftMargin: 20,
-              shrink: false,
-              monthColor: ColorManager.textColor,
-              dayColor: ColorManager.textColor,
-              dayNameColor: const Color(0xFF333A47),
-              activeDayColor: Colors.white,
-              activeBackgroundDayColor: Colors.blue,
-              dotsColor: const Color(0xFF333A47),
-              selectableDayPredicate: (date) => date.day != 23,
-              locale: 'en',
+              onDaySelected: (selectedDay, focusedDay) {
+                if (!isSameDay(_selectedDate, selectedDay)) {
+                  setState(() {
+                    _selectedDate = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                }
+              },
+              // onFormatChanged: (format) {
+              //   if (_calendarFormat != format) {
+              //     // Call `setState()` when updating calendar format
+              //     setState(() {
+              //       _calendarFormat = format;
+              //     });
+              //   }
+              // },
+              onPageChanged: (focusedDay) {
+                // No need to call `setState()` here
+                _focusedDay = focusedDay;
+              },
             ),
+
             const SizedBox(
               height: 10,
             ),
